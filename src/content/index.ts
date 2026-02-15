@@ -138,6 +138,11 @@ function queueCandidateAnalysis(img: HTMLImageElement): void {
     return;
   }
 
+  if (!img.complete) {
+    bindLoadListener(img);
+    return;
+  }
+
   const imageUrl = resolveImageUrl(img);
   if (!imageUrl) {
     debug('skip queue: missing image url');
@@ -174,14 +179,24 @@ function queueCandidateAnalysis(img: HTMLImageElement): void {
     return;
   }
 
-  if (img.complete) {
-    markPending(imageUrl, img);
-    void analyzeAndInject(img);
-    return;
+  markPending(imageUrl, img);
+  void analyzeAndInject(img);
+}
+
+function resolveImageUrl(img: HTMLImageElement): string | null {
+  const raw = img.currentSrc || img.src;
+  if (!raw) {
+    return null;
   }
 
+  return raw;
+}
+
+function bindLoadListener(img: HTMLImageElement, imageUrlForLog?: string): void {
   if (img.dataset.lumosLoadBound === 'true') {
-    debug('skip queue: load listener already bound', { imageUrl });
+    debug('skip queue: load listener already bound', {
+      imageUrl: imageUrlForLog ?? resolveImageUrl(img) ?? 'unknown'
+    });
     return;
   }
 
@@ -193,15 +208,6 @@ function queueCandidateAnalysis(img: HTMLImageElement): void {
     },
     { once: true }
   );
-}
-
-function resolveImageUrl(img: HTMLImageElement): string | null {
-  const raw = img.currentSrc || img.src;
-  if (!raw) {
-    return null;
-  }
-
-  return raw;
 }
 
 function resetImageForSrcChange(img: HTMLImageElement): void {
