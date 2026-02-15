@@ -25,6 +25,12 @@ npm install
 npm run build
 ```
 
+빌드와 동시에 배포용 압축파일(`lumos-client-dist.zip`)까지 만들려면:
+
+```bash
+npm run build:artifact
+```
+
 디버그 시각화(요청 이미지 보더/패널)가 필요한 경우:
 
 ```bash

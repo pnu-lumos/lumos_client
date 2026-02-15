@@ -7,6 +7,7 @@
     "dev": "vite",
     "build": "tsc --noEmit && vite build",
     "build:debug": "VITE_DEBUG_VISUALIZER=true npm run build",
+    "build:artifact": "npm run build && rm -f lumos-client-dist.zip && (cd dist && zip -qr ../lumos-client-dist.zip .)",
     "preview": "vite preview",
     "typecheck": "tsc --noEmit"
   },
