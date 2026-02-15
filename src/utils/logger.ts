@@ -16,3 +16,19 @@ export function log(level: LogLevel, message: string, ...args: unknown[]): void 
 
   console[level](`[lumos] ${message}`, ...args);
 }
+
+export function debug(message: string, ...args: unknown[]): void {
+  log('debug', message, ...args);
+}
+
+export function info(message: string, ...args: unknown[]): void {
+  log('info', message, ...args);
+}
+
+export function warn(message: string, ...args: unknown[]): void {
+  log('warn', message, ...args);
+}
+
+export function error(message: string, ...args: unknown[]): void {
+  log('error', message, ...args);
+}
