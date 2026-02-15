@@ -31,8 +31,18 @@ async function analyzeAndInject(img: HTMLImageElement): Promise<void> {
       imageUrl,
       pageUrl: window.location.href
     });
-    injectAltText(img, result.altText);
-    announcer.announce('이미지 분석이 완료되었습니다');
+    const injection = injectAltText(img, result.altText);
+
+    if (injection.applied) {
+      announcer.announce('이미지 분석이 완료되었습니다');
+    } else {
+      console.info('[lumos] alt injection skipped', {
+        reason: injection.reason,
+        imageUrl,
+        source: result.source,
+        latencyMs: result.latencyMs
+      });
+    }
   } catch (error) {
     console.warn('[lumos] analyze request failed', error);
     announcer.announce('이미지 분석에 실패했습니다');
