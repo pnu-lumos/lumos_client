@@ -1,0 +1,9 @@
+docs
+.claude/
+AGENTS.md
+node_modules
+dist
+.vite
+.DS_Store
+lumos-client-dist.zip
+lumos-client-v*.zip
