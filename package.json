@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc --noEmit && vite build",
+    "build:debug": "VITE_DEBUG_VISUALIZER=true npm run build",
     "preview": "vite preview",
     "typecheck": "tsc --noEmit"
   },

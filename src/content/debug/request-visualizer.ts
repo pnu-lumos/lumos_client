@@ -1,4 +1,5 @@
-const IS_DEV = import.meta.env.DEV;
+const IS_DEBUG_VISUALIZER_ENABLED =
+  import.meta.env.DEV || import.meta.env.VITE_DEBUG_VISUALIZER === 'true';
 const PANEL_ID = 'lumos-debug-api-panel';
 
 const state = {
@@ -11,7 +12,7 @@ const state = {
 let panel: HTMLDivElement | null = null;
 
 export function markApiRequested(img: HTMLImageElement, imageUrl: string): void {
-  if (!IS_DEV) {
+  if (!IS_DEBUG_VISUALIZER_ENABLED) {
     return;
   }
 
@@ -31,7 +32,7 @@ export function markApiRequested(img: HTMLImageElement, imageUrl: string): void 
 }
 
 export function markApiSucceeded(img: HTMLImageElement): void {
-  if (!IS_DEV) {
+  if (!IS_DEBUG_VISUALIZER_ENABLED) {
     return;
   }
 
@@ -43,7 +44,7 @@ export function markApiSucceeded(img: HTMLImageElement): void {
 }
 
 export function markApiFailed(img: HTMLImageElement): void {
-  if (!IS_DEV) {
+  if (!IS_DEBUG_VISUALIZER_ENABLED) {
     return;
   }
 
@@ -58,7 +59,7 @@ export function markApiFailed(img: HTMLImageElement): void {
 }
 
 function ensurePanel(): void {
-  if (!IS_DEV || panel) {
+  if (!IS_DEBUG_VISUALIZER_ENABLED || panel) {
     return;
   }
 
