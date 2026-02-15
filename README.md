@@ -8,7 +8,8 @@
 
 ### 1) 배포된 빌드 결과물 다운로드 (권장)
 
-1. 배포된 `lumos-client-dist.zip`(또는 `dist.zip`) 파일을 다운로드합니다.
+1. 아래 링크에서 최신 빌드 결과물(`lumos-client-dist.zip`)을 다운로드합니다.
+   - https://github.com/pnu-lumos/lumos-client/releases/latest/download/lumos-client-dist.zip
 2. 압축을 해제해 `dist` 폴더를 준비합니다.
 
 ### 2) Chrome에 확장 로드
@@ -24,6 +25,16 @@
 npm install
 npm run build
 ```
+
+빌드와 동시에 배포용 압축파일(`lumos-client-dist.zip`)까지 만들려면:
+
+```bash
+npm run build:artifact
+```
+
+위 명령을 실행하면 아래 파일이 함께 생성됩니다.
+- `lumos-client-v<version>.zip` (버전 고정 배포용)
+- `lumos-client-dist.zip` (README 고정 링크용 최신 파일)
 
 디버그 시각화(요청 이미지 보더/패널)가 필요한 경우:
 
