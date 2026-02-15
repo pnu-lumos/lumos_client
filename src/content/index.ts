@@ -13,18 +13,30 @@ import {
   markPending,
   unbindImage
 } from './observer/state';
+import { getExtensionSettings, onSettingsChanged, type ExtensionSettings } from '../utils/storage';
 
 const inFlight = new Set<string>();
 const announcer = createAnnouncer(document);
+const runtimeSettings: ExtensionSettings = {
+  enabled: false,
+  autoAnalyze: false
+};
+let settingsReady = false;
 
 void sendPing().catch((error) => {
   console.warn('[lumos] ping failed', error);
+});
+void initializeSettings();
+
+const unsubscribeSettings = onSettingsChanged((nextSettings) => {
+  applyRuntimeSettings(nextSettings);
 });
 
 async function analyzeAndInject(img: HTMLImageElement): Promise<void> {
   const imageUrl = resolveImageUrl(img);
 
   if (
+    !canAnalyzeNow() ||
     !imageUrl ||
     inFlight.has(imageUrl) ||
     img.dataset.lumosProcessed === 'true' ||
@@ -44,6 +56,10 @@ async function analyzeAndInject(img: HTMLImageElement): Promise<void> {
       imageUrl,
       pageUrl: window.location.href
     });
+    if (!canAnalyzeNow()) {
+      return;
+    }
+
     const injection = injectAltText(img, result.altText);
     markCompleted(imageUrl, injection.text, img);
 
@@ -94,11 +110,16 @@ const disconnectObserver = setupImageObserver(document, {
 });
 
 window.addEventListener('beforeunload', () => {
+  unsubscribeSettings();
   disconnectObserver();
   announcer.destroy();
 });
 
 function queueCandidateAnalysis(img: HTMLImageElement): void {
+  if (!settingsReady || !canAnalyzeNow()) {
+    return;
+  }
+
   const imageUrl = resolveImageUrl(img);
   if (!imageUrl) {
     return;
@@ -172,4 +193,37 @@ function resetImageForSrcChange(img: HTMLImageElement): void {
   delete img.dataset.lumosInjectedAt;
   delete img.dataset.lumosLoadBound;
   delete img.dataset.lumosOriginalAlt;
+}
+
+async function initializeSettings(): Promise<void> {
+  try {
+    const settings = await getExtensionSettings();
+    applyRuntimeSettings(settings);
+  } catch (error) {
+    console.warn('[lumos] failed to load extension settings, using defaults', error);
+    applyRuntimeSettings({
+      enabled: true,
+      autoAnalyze: true
+    });
+  } finally {
+    settingsReady = true;
+    if (canAnalyzeNow()) {
+      scanCurrentImages();
+    }
+  }
+}
+
+function applyRuntimeSettings(settings: ExtensionSettings): void {
+  const wasActive = canAnalyzeNow();
+
+  runtimeSettings.enabled = settings.enabled;
+  runtimeSettings.autoAnalyze = settings.autoAnalyze;
+
+  if (!wasActive && canAnalyzeNow() && settingsReady) {
+    scanCurrentImages();
+  }
+}
+
+function canAnalyzeNow(): boolean {
+  return runtimeSettings.enabled && runtimeSettings.autoAnalyze;
 }
