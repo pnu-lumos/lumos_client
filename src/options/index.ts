@@ -1,7 +1,7 @@
 import {
-  DEFAULT_SETTINGS,
-  getSyncStorage,
-  setSyncStorage,
+  getExtensionSettings,
+  onSettingsChanged,
+  setExtensionSettings,
   type ExtensionSettings
 } from '../utils/storage';
 
@@ -10,6 +10,12 @@ const autoAnalyzeInput = requireElement<HTMLInputElement>('#autoAnalyze');
 const status = requireElement<HTMLElement>('#status');
 
 void loadSettings();
+const unsubscribe = onSettingsChanged((settings) => {
+  applySettings(settings);
+});
+window.addEventListener('beforeunload', () => {
+  unsubscribe();
+});
 
 enabledInput.addEventListener('change', () => {
   void saveSettings();
@@ -20,21 +26,12 @@ autoAnalyzeInput.addEventListener('change', () => {
 });
 
 async function loadSettings(): Promise<void> {
-  const stored = await getSyncStorage<Partial<ExtensionSettings>>({
-    enabled: DEFAULT_SETTINGS.enabled,
-    autoAnalyze: DEFAULT_SETTINGS.autoAnalyze
-  });
-  const settings: ExtensionSettings = {
-    enabled: stored.enabled ?? DEFAULT_SETTINGS.enabled,
-    autoAnalyze: stored.autoAnalyze ?? DEFAULT_SETTINGS.autoAnalyze
-  };
-
-  enabledInput.checked = settings.enabled;
-  autoAnalyzeInput.checked = settings.autoAnalyze;
+  const settings = await getExtensionSettings();
+  applySettings(settings);
 }
 
 async function saveSettings(): Promise<void> {
-  await setSyncStorage({
+  await setExtensionSettings({
     enabled: enabledInput.checked,
     autoAnalyze: autoAnalyzeInput.checked
   });
@@ -43,6 +40,12 @@ async function saveSettings(): Promise<void> {
   window.setTimeout(() => {
     status.textContent = '';
   }, 1200);
+}
+
+function applySettings(settings: ExtensionSettings): void {
+  enabledInput.checked = settings.enabled;
+  autoAnalyzeInput.checked = settings.autoAnalyze;
+  autoAnalyzeInput.disabled = !settings.enabled;
 }
 
 function requireElement<T extends Element>(selector: string): T {
