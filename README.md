@@ -1,12 +1,45 @@
 # lumos-client
 
-루모스 클라이언트는 시각장애인을 위한 쇼핑몰 상세 이미지 대체 텍스트 생성 크롬 익스텐션입니다.
+## 프로젝트 소개
 
-## 개발 시작
+루모스는 시각장애인을 위한 쇼핑몰 상세 이미지 대체 텍스트 생성 Chrome Extension입니다.
+
+## 설치 방법
+
+### 1) 배포된 빌드 결과물 다운로드 (권장)
+
+1. 배포된 `lumos-client-dist.zip`(또는 `dist.zip`) 파일을 다운로드합니다.
+2. 압축을 해제해 `dist` 폴더를 준비합니다.
+
+### 2) Chrome에 확장 로드
+
+1. `chrome://extensions` 접속
+2. 우측 상단 `개발자 모드` 활성화
+3. `압축해제된 확장 프로그램을 로드합니다` 클릭
+4. 압축 해제한 `dist` 폴더 선택
+
+### 3) (선택) 로컬에서 직접 빌드하기
 
 ```bash
 npm install
-npm run dev
+npm run build
 ```
 
-개발 서버 실행 후 Chrome 확장 프로그램 페이지에서 Vite 출력 디렉토리를 로드해 테스트합니다.
+디버그 시각화(요청 이미지 보더/패널)가 필요한 경우:
+
+```bash
+npm run build:debug
+```
+
+코드 수정 후에는 빌드를 다시 실행하고 확장 프로그램을 새로고침하세요.
+
+## 기술 스택
+
+| 영역              | 기술                              |
+| ----------------- | --------------------------------- |
+| Language          | TypeScript                        |
+| Build Tool        | Vite                              |
+| Chrome Extension  | Manifest V3 + CRXJS               |
+| Storage           | `chrome.storage.sync`             |
+| Runtime Messaging | `chrome.runtime.sendMessage`      |
+| API               | Fetch 기반 클라이언트 + Mock 응답 |
