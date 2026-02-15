@@ -1,5 +1,5 @@
 import { createAnnouncer } from './accessibility/announcer';
-import { detectCandidateImages } from './detector';
+import { detectCandidateImages, isCandidateImage } from './detector';
 import { injectAltText } from './injector';
 import { setupImageObserver } from './observer';
 import { MESSAGE_TYPES } from '../types';
@@ -13,7 +13,12 @@ void chrome.runtime.sendMessage({ type: MESSAGE_TYPES.PING });
 async function analyzeAndInject(img: HTMLImageElement): Promise<void> {
   const imageUrl = img.currentSrc || img.src;
 
-  if (!imageUrl || inFlight.has(imageUrl) || img.dataset.lumosProcessed === 'true') {
+  if (
+    !imageUrl ||
+    inFlight.has(imageUrl) ||
+    img.dataset.lumosProcessed === 'true' ||
+    !isCandidateImage(img, document)
+  ) {
     return;
   }
 
@@ -44,16 +49,44 @@ async function analyzeAndInject(img: HTMLImageElement): Promise<void> {
 function scanCurrentImages(): void {
   const images = detectCandidateImages(document);
   for (const img of images) {
-    void analyzeAndInject(img);
+    queueCandidateAnalysis(img);
   }
 }
 
 scanCurrentImages();
 const disconnectObserver = setupImageObserver(document, (img) => {
-  void analyzeAndInject(img);
+  queueCandidateAnalysis(img);
 });
 
 window.addEventListener('beforeunload', () => {
   disconnectObserver();
   announcer.destroy();
 });
+
+function queueCandidateAnalysis(img: HTMLImageElement): void {
+  if (img.dataset.lumosProcessed === 'true') {
+    return;
+  }
+
+  if (img.complete) {
+    if (isCandidateImage(img, document)) {
+      void analyzeAndInject(img);
+    }
+    return;
+  }
+
+  if (img.dataset.lumosLoadBound === 'true') {
+    return;
+  }
+
+  img.dataset.lumosLoadBound = 'true';
+  img.addEventListener(
+    'load',
+    () => {
+      if (isCandidateImage(img, document)) {
+        void analyzeAndInject(img);
+      }
+    },
+    { once: true }
+  );
+}
