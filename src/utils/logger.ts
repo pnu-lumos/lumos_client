@@ -7,13 +7,7 @@ const levelPriority: Record<LogLevel, number> = {
   error: 40
 };
 
-// Temporary QA override: keep verbose logs enabled in extension builds.
-const FORCE_DEBUG_FOR_QA = true;
-const activeLevel: LogLevel = FORCE_DEBUG_FOR_QA
-  ? 'debug'
-  : import.meta.env.DEV
-    ? 'debug'
-    : 'warn';
+const activeLevel: LogLevel = import.meta.env.DEV ? 'debug' : 'warn';
 
 export function log(level: LogLevel, message: string, ...args: unknown[]): void {
   if (levelPriority[level] < levelPriority[activeLevel]) {
