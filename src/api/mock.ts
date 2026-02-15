@@ -11,6 +11,7 @@ export async function analyzeImageMock(
   await new Promise((resolve) => setTimeout(resolve, MOCK_DELAY_MS));
 
   return {
-    altText: `상품 상세 이미지입니다. 주요 정보가 포함되어 있으며 파일 식별명은 ${summary}입니다.`
+    altText: `상품 상세 이미지입니다. 주요 정보가 포함되어 있으며 파일 식별명은 ${summary}입니다.`,
+    source: 'mock'
   };
 }
