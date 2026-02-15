@@ -3,6 +3,7 @@ import { detectCandidateImages, isCandidateImage } from './detector';
 import { injectAltText } from './injector';
 import { requestImageAnalysis, sendPing } from './messaging';
 import { setupImageObserver } from './observer';
+import { markApiFailed, markApiRequested, markApiSucceeded } from './debug/request-visualizer';
 import {
   bindImageToUrl,
   getCachedAltText,
@@ -64,6 +65,7 @@ async function analyzeAndInject(img: HTMLImageElement): Promise<void> {
   markAnalyzing(imageUrl, img);
 
   try {
+    markApiRequested(img, imageUrl);
     const result = await requestImageAnalysis({
       imageUrl,
       pageUrl: window.location.href
@@ -74,6 +76,7 @@ async function analyzeAndInject(img: HTMLImageElement): Promise<void> {
 
     const injection = injectAltText(img, result.altText);
     markCompleted(imageUrl, injection.text, img);
+    markApiSucceeded(img);
 
     if (injection.applied) {
       // announcer.announce('이미지 분석이 완료되었습니다', {
@@ -90,6 +93,7 @@ async function analyzeAndInject(img: HTMLImageElement): Promise<void> {
   } catch (error) {
     const message = error instanceof Error ? error.message : 'unknown analyze error';
     markError(imageUrl, message, img);
+    markApiFailed(img);
     warn('analyze request failed', error);
     // announcer.announce('이미지 분석에 실패했습니다', {
     //   dedupeKey: 'analysis-failed'
