@@ -14,7 +14,7 @@ import {
   unbindImage
 } from './observer/state';
 import { getExtensionSettings, onSettingsChanged, type ExtensionSettings } from '../utils/storage';
-import { info, warn } from '../utils/logger';
+import { debug, info, warn } from '../utils/logger';
 
 const inFlight = new Set<string>();
 const announcer = createAnnouncer(document);
@@ -36,13 +36,24 @@ const unsubscribeSettings = onSettingsChanged((nextSettings) => {
 async function analyzeAndInject(img: HTMLImageElement): Promise<void> {
   const imageUrl = resolveImageUrl(img);
 
-  if (
-    !canAnalyzeNow() ||
-    !imageUrl ||
-    inFlight.has(imageUrl) ||
-    img.dataset.lumosProcessed === 'true' ||
-    !isCandidateImage(img, document)
-  ) {
+  if (!canAnalyzeNow()) {
+    debug('skip analyze: feature disabled by settings');
+    return;
+  }
+  if (!imageUrl) {
+    debug('skip analyze: missing image url');
+    return;
+  }
+  if (inFlight.has(imageUrl)) {
+    debug('skip analyze: already in-flight', { imageUrl });
+    return;
+  }
+  if (img.dataset.lumosProcessed === 'true') {
+    debug('skip analyze: image already processed', { imageUrl });
+    return;
+  }
+  if (!isCandidateImage(img, document)) {
+    debug('skip analyze: not a candidate image', { imageUrl });
     return;
   }
 
@@ -90,6 +101,7 @@ async function analyzeAndInject(img: HTMLImageElement): Promise<void> {
 
 function scanCurrentImages(): void {
   const images = detectCandidateImages(document);
+  debug('initial scan candidates', { count: images.length });
   for (const img of images) {
     queueCandidateAnalysis(img);
   }
@@ -117,12 +129,18 @@ window.addEventListener('beforeunload', () => {
 });
 
 function queueCandidateAnalysis(img: HTMLImageElement): void {
-  if (!settingsReady || !canAnalyzeNow()) {
+  if (!settingsReady) {
+    debug('skip queue: settings not ready');
+    return;
+  }
+  if (!canAnalyzeNow()) {
+    debug('skip queue: feature disabled by settings');
     return;
   }
 
   const imageUrl = resolveImageUrl(img);
   if (!imageUrl) {
+    debug('skip queue: missing image url');
     return;
   }
 
@@ -132,6 +150,7 @@ function queueCandidateAnalysis(img: HTMLImageElement): void {
   }
 
   if (!isCandidateImage(img, document)) {
+    debug('skip queue: not a candidate image', { imageUrl });
     return;
   }
 
@@ -146,10 +165,12 @@ function queueCandidateAnalysis(img: HTMLImageElement): void {
 
   const state = getImageState(imageUrl);
   if (state?.status === 'analyzing') {
+    debug('skip queue: state already analyzing', { imageUrl });
     return;
   }
 
   if (img.dataset.lumosProcessed === 'true') {
+    debug('skip queue: already processed', { imageUrl });
     return;
   }
 
@@ -160,6 +181,7 @@ function queueCandidateAnalysis(img: HTMLImageElement): void {
   }
 
   if (img.dataset.lumosLoadBound === 'true') {
+    debug('skip queue: load listener already bound', { imageUrl });
     return;
   }
 
@@ -194,6 +216,7 @@ function resetImageForSrcChange(img: HTMLImageElement): void {
   delete img.dataset.lumosInjectedAt;
   delete img.dataset.lumosLoadBound;
   delete img.dataset.lumosOriginalAlt;
+  debug('image state reset after src change');
 }
 
 async function initializeSettings(): Promise<void> {
@@ -208,6 +231,10 @@ async function initializeSettings(): Promise<void> {
     });
   } finally {
     settingsReady = true;
+    debug('settings initialized', {
+      enabled: runtimeSettings.enabled,
+      autoAnalyze: runtimeSettings.autoAnalyze
+    });
     if (canAnalyzeNow()) {
       scanCurrentImages();
     }
@@ -219,8 +246,13 @@ function applyRuntimeSettings(settings: ExtensionSettings): void {
 
   runtimeSettings.enabled = settings.enabled;
   runtimeSettings.autoAnalyze = settings.autoAnalyze;
+  debug('settings changed', {
+    enabled: settings.enabled,
+    autoAnalyze: settings.autoAnalyze
+  });
 
   if (!wasActive && canAnalyzeNow() && settingsReady) {
+    debug('settings activated; rescanning page');
     scanCurrentImages();
   }
 }
