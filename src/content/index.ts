@@ -14,6 +14,7 @@ import {
   unbindImage
 } from './observer/state';
 import { getExtensionSettings, onSettingsChanged, type ExtensionSettings } from '../utils/storage';
+import { info, warn } from '../utils/logger';
 
 const inFlight = new Set<string>();
 const announcer = createAnnouncer(document);
@@ -24,7 +25,7 @@ const runtimeSettings: ExtensionSettings = {
 let settingsReady = false;
 
 void sendPing().catch((error) => {
-  console.warn('[lumos] ping failed', error);
+  warn('ping failed', error);
 });
 void initializeSettings();
 
@@ -68,7 +69,7 @@ async function analyzeAndInject(img: HTMLImageElement): Promise<void> {
       //   dedupeKey: 'analysis-completed'
       // });
     } else {
-      console.info('[lumos] alt injection skipped', {
+      info('alt injection skipped', {
         reason: injection.reason,
         imageUrl,
         source: result.source,
@@ -78,7 +79,7 @@ async function analyzeAndInject(img: HTMLImageElement): Promise<void> {
   } catch (error) {
     const message = error instanceof Error ? error.message : 'unknown analyze error';
     markError(imageUrl, message, img);
-    console.warn('[lumos] analyze request failed', error);
+    warn('analyze request failed', error);
     // announcer.announce('이미지 분석에 실패했습니다', {
     //   dedupeKey: 'analysis-failed'
     // });
@@ -200,7 +201,7 @@ async function initializeSettings(): Promise<void> {
     const settings = await getExtensionSettings();
     applyRuntimeSettings(settings);
   } catch (error) {
-    console.warn('[lumos] failed to load extension settings, using defaults', error);
+    warn('failed to load extension settings, using defaults', error);
     applyRuntimeSettings({
       enabled: true,
       autoAnalyze: true

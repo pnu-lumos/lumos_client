@@ -1,3 +1,5 @@
+import { warn } from './logger';
+
 export interface ExtensionSettings {
   enabled: boolean;
   autoAnalyze: boolean;
@@ -11,21 +13,29 @@ export const DEFAULT_SETTINGS: ExtensionSettings = {
 export type SettingsChangeListener = (
   settings: ExtensionSettings,
   changedKeys: Array<keyof ExtensionSettings>
-) => void;
+) => void | Promise<void>;
 
 export function getSyncStorage<T extends object>(
   keys: string[] | string | object | null
 ): Promise<T> {
-  return new Promise((resolve) => {
+  return new Promise((resolve, reject) => {
     chrome.storage.sync.get(keys, (items) => {
+      if (chrome.runtime.lastError) {
+        reject(new Error(chrome.runtime.lastError.message));
+        return;
+      }
       resolve(items as T);
     });
   });
 }
 
 export function setSyncStorage(items: Record<string, unknown>): Promise<void> {
-  return new Promise((resolve) => {
+  return new Promise((resolve, reject) => {
     chrome.storage.sync.set(items, () => {
+      if (chrome.runtime.lastError) {
+        reject(new Error(chrome.runtime.lastError.message));
+        return;
+      }
       resolve();
     });
   });
@@ -63,12 +73,11 @@ export function onSettingsChanged(listener: SettingsChangeListener): () => void 
       return;
     }
 
-    const partial: Partial<ExtensionSettings> = {};
-    for (const key of changedKeys) {
-      partial[key] = changes[key].newValue as ExtensionSettings[typeof key];
-    }
-
-    listener(normalizeSettings(partial), [...changedKeys]);
+    void getExtensionSettings()
+      .then((settings) => listener(settings, [...changedKeys]))
+      .catch((error) => {
+        warn('failed to refresh settings after storage change', error);
+      });
   };
 
   chrome.storage.onChanged.addListener(handleStorageChange);

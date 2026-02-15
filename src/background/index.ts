@@ -1,6 +1,7 @@
 import { analyzeImage } from '../api/client';
 import { ApiClientError } from '../api/types';
 import { MESSAGE_TYPES, type MessageType } from '../types';
+import { info } from '../utils/logger';
 import type {
   AnalyzeImageRequestMessage,
   PingRequestMessage,
@@ -11,7 +12,7 @@ import type {
 } from '../types';
 
 chrome.runtime.onInstalled.addListener(() => {
-  console.info('[lumos] background service worker installed');
+  info('background service worker installed');
 });
 
 chrome.runtime.onMessage.addListener(

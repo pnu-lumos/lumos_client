@@ -13,7 +13,7 @@ export async function sendPing(): Promise<void> {
     payload: {}
   };
 
-  const response = (await chrome.runtime.sendMessage(message)) as RuntimeResponseMessage;
+  const response = (await sendRuntimeMessage(message)) as RuntimeResponseMessage;
   if (!response.success) {
     throw createRuntimeError(response);
   }
@@ -32,7 +32,7 @@ export async function requestImageAnalysis(input: {
     }
   };
 
-  const response = (await chrome.runtime.sendMessage(message)) as RuntimeResponseMessage;
+  const response = (await sendRuntimeMessage(message)) as RuntimeResponseMessage;
 
   if (response.success) {
     if (response.type !== MESSAGE_TYPES.ANALYZE_IMAGE) {
@@ -56,4 +56,13 @@ function createRequestId(): string {
   }
 
   return `${Date.now()}-${Math.random().toString(16).slice(2)}`;
+}
+
+async function sendRuntimeMessage(message: unknown): Promise<unknown> {
+  try {
+    return await chrome.runtime.sendMessage(message);
+  } catch (error) {
+    const detail = error instanceof Error ? error.message : 'unknown runtime message error';
+    throw new Error(`Runtime messaging failed: ${detail}`);
+  }
 }
