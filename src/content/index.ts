@@ -1,14 +1,15 @@
 import { createAnnouncer } from './accessibility/announcer';
 import { detectCandidateImages, isCandidateImage } from './detector';
 import { injectAltText } from './injector';
+import { requestImageAnalysis, sendPing } from './messaging';
 import { setupImageObserver } from './observer';
-import { MESSAGE_TYPES } from '../types';
-import type { RuntimeResponseMessage } from '../types';
 
 const inFlight = new Set<string>();
 const announcer = createAnnouncer(document);
 
-void chrome.runtime.sendMessage({ type: MESSAGE_TYPES.PING });
+void sendPing().catch((error) => {
+  console.warn('[lumos] ping failed', error);
+});
 
 async function analyzeAndInject(img: HTMLImageElement): Promise<void> {
   const imageUrl = img.currentSrc || img.src;
@@ -26,18 +27,12 @@ async function analyzeAndInject(img: HTMLImageElement): Promise<void> {
   announcer.announce('상품 상세 이미지를 분석 중입니다');
 
   try {
-    const response = (await chrome.runtime.sendMessage({
-      type: MESSAGE_TYPES.ANALYZE_IMAGE,
-      payload: {
-        imageUrl,
-        pageUrl: window.location.href
-      }
-    })) as RuntimeResponseMessage;
-
-    if (response.success && response.data?.altText) {
-      injectAltText(img, response.data.altText);
-      announcer.announce('이미지 분석이 완료되었습니다');
-    }
+    const result = await requestImageAnalysis({
+      imageUrl,
+      pageUrl: window.location.href
+    });
+    injectAltText(img, result.altText);
+    announcer.announce('이미지 분석이 완료되었습니다');
   } catch (error) {
     console.warn('[lumos] analyze request failed', error);
     announcer.announce('이미지 분석에 실패했습니다');
