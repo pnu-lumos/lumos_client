@@ -6,3 +6,4 @@ dist
 .vite
 .DS_Store
 lumos-client-dist.zip
+lumos-client-v*.zip
