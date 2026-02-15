@@ -1,12 +1,12 @@
 import { shouldAnalyzeImage } from './filters';
-import { getDetailRoots } from './selectors';
+import { getDetailRoots, isInsideDetailRoots, queryPlatformImages } from './selectors';
 
 export function detectCandidateImages(doc: Document): HTMLImageElement[] {
   const roots = getDetailRoots(doc);
   const unique = new Set<HTMLImageElement>();
 
   for (const root of roots) {
-    for (const image of root.querySelectorAll<HTMLImageElement>('img')) {
+    for (const image of queryPlatformImages(root, doc)) {
       if (shouldAnalyzeImage(image)) {
         unique.add(image);
       }
@@ -23,6 +23,5 @@ export function isCandidateImage(img: HTMLImageElement, doc: Document): boolean 
     return false;
   }
 
-  const roots = getDetailRoots(doc);
-  return roots.some((root) => root === img || root.contains(img));
+  return isInsideDetailRoots(img, doc);
 }
