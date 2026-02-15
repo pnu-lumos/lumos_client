@@ -24,7 +24,9 @@ async function analyzeAndInject(img: HTMLImageElement): Promise<void> {
   }
 
   inFlight.add(imageUrl);
-  announcer.announce('상품 상세 이미지를 분석 중입니다');
+  // announcer.announce('상품 상세 이미지를 분석 중입니다', {
+  //   dedupeKey: 'analysis-started'
+  // });
 
   try {
     const result = await requestImageAnalysis({
@@ -34,7 +36,9 @@ async function analyzeAndInject(img: HTMLImageElement): Promise<void> {
     const injection = injectAltText(img, result.altText);
 
     if (injection.applied) {
-      announcer.announce('이미지 분석이 완료되었습니다');
+      // announcer.announce('이미지 분석이 완료되었습니다', {
+      //   dedupeKey: 'analysis-completed'
+      // });
     } else {
       console.info('[lumos] alt injection skipped', {
         reason: injection.reason,
@@ -45,7 +49,9 @@ async function analyzeAndInject(img: HTMLImageElement): Promise<void> {
     }
   } catch (error) {
     console.warn('[lumos] analyze request failed', error);
-    announcer.announce('이미지 분석에 실패했습니다');
+    // announcer.announce('이미지 분석에 실패했습니다', {
+    //   dedupeKey: 'analysis-failed'
+    // });
   } finally {
     inFlight.delete(imageUrl);
   }
