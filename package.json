@@ -1,6 +1,6 @@
 {
   "name": "lumos-client",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "private": true,
   "type": "module",
   "scripts": {
@@ -8,6 +8,7 @@
     "build": "tsc --noEmit && vite build",
     "build:debug": "VITE_DEBUG_VISUALIZER=true npm run build",
     "build:artifact": "npm run build && rm -f lumos-client-dist.zip lumos-client-v*.zip && (cd dist && zip -qr ../lumos-client-v$npm_package_version.zip .) && cp -f lumos-client-v$npm_package_version.zip lumos-client-dist.zip",
+    "build:debugartifact": "npm run build:debug && rm -f lumos-clidnt-dist-debug.zip lumos-client-debug-v*.zip && (cd dist && zip -qr ../lumos-client-debug-v$npm_package_version.zip .) && cp -f lumos-client-debug-v$npm_package_version.zip lumos-clidnt-dist-debug.zip",
     "preview": "vite preview",
     "typecheck": "tsc --noEmit"
   },

@@ -23,9 +23,10 @@ export function markApiRequested(img: HTMLImageElement, imageUrl: string): void 
   img.dataset.lumosDebugApiStatus = 'pending';
   img.dataset.lumosDebugApiRequestIndex = `${state.totalRequests}`;
 
-  // Visual marker for images that triggered an API request.
-  img.style.outline = '2px solid #dc2626';
+  // Requested: green outline
+  img.style.outline = '2px solid #16a34a';
   img.style.outlineOffset = '2px';
+  img.style.boxShadow = '';
 
   ensurePanel();
   renderPanel();
@@ -38,6 +39,9 @@ export function markApiSucceeded(img: HTMLImageElement): void {
 
   state.successRequests += 1;
   img.dataset.lumosDebugApiStatus = 'success';
+  img.style.outline = '2px solid #2563eb';
+  img.style.outlineOffset = '2px';
+  img.style.boxShadow = '';
 
   ensurePanel();
   renderPanel();
@@ -50,9 +54,9 @@ export function markApiFailed(img: HTMLImageElement): void {
 
   state.failedRequests += 1;
   img.dataset.lumosDebugApiStatus = 'failed';
-
-  // Keep requested border and add a subtle failure cue.
-  img.style.boxShadow = 'inset 0 0 0 2px rgba(245, 158, 11, 0.85)';
+  img.style.outline = '2px solid #dc2626';
+  img.style.outlineOffset = '2px';
+  img.style.boxShadow = '';
 
   ensurePanel();
   renderPanel();

@@ -7,3 +7,5 @@ dist
 .DS_Store
 lumos-client-dist.zip
 lumos-client-v*.zip
+lumos-clidnt-dist-debug.zip
+lumos-client-debug-v*.zip
