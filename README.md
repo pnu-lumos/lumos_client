@@ -10,6 +10,9 @@
 
 1. 아래 링크에서 최신 빌드 결과물(`lumos-client-dist.zip`)을 다운로드합니다.
    - https://github.com/pnu-lumos/lumos-client/releases/latest/download/lumos-client-dist.zip
+   1-1. 디버그 버전을 다운로드하려면 아래 링크에서 `lumos-clidnt-dist-debug.zip`을 받으면 됩니다.
+   - https://github.com/pnu-lumos/lumos-client/releases/latest/download/lumos-clidnt-dist-debug.zip
+   디버그 버전은 일반 버전과 달리 API 요청 디버그 시각화(요청/성공/실패 아웃라인, 우하단 패널)가 활성화됩니다.
 2. 압축을 해제해 `dist` 폴더를 준비합니다.
 
 ### 2) Chrome에 확장 로드
