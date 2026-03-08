@@ -9,3 +9,5 @@ lumos-client-dist.zip
 lumos-client-v*.zip
 lumos-client-dist-debug.zip
 lumos-client-debug-v*.zip
+lumos-client-dist
+lumos-client-dist-debug
