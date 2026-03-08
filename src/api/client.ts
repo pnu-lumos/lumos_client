@@ -1,20 +1,26 @@
-import { analyzeImageMock } from './mock';
+import { analyzeImageMock } from "./mock";
 import {
   ApiClientError,
   type AnalyzeImageOptions,
   type AnalyzeImageRequest,
-  type AnalyzeImageResponse
-} from './types';
-import { getExtensionSettings, isValidApiBaseUrl, normalizeApiBaseUrl } from '../utils/storage';
+  type AnalyzeImageResponse,
+} from "./types";
+import {
+  getExtensionSettings,
+  isValidApiBaseUrl,
+  normalizeApiBaseUrl,
+} from "../utils/storage";
 
-const DEFAULT_API_BASE_URL = normalizeApiBaseUrl(import.meta.env.VITE_LUMOS_API_BASE_URL);
-const DEFAULT_TIMEOUT_MS = 12_000;
+const DEFAULT_API_BASE_URL = normalizeApiBaseUrl(
+  import.meta.env.VITE_LUMOS_API_BASE_URL,
+);
+const DEFAULT_TIMEOUT_MS = 30_000;
 const DEFAULT_MAX_RETRIES = 2;
 const DEFAULT_RETRY_DELAY_MS = 400;
 
 export async function analyzeImage(
   request: AnalyzeImageRequest,
-  options: AnalyzeImageOptions = {}
+  options: AnalyzeImageOptions = {},
 ): Promise<AnalyzeImageResponse> {
   const apiBaseUrl = await resolveApiBaseUrl();
   if (!apiBaseUrl) {
@@ -31,32 +37,39 @@ export async function analyzeImage(
       const response = await fetchWithTimeout(
         `${apiBaseUrl}/api/analyze`,
         {
-          method: 'POST',
+          method: "POST",
           headers: {
-            'Content-Type': 'application/json'
+            "Content-Type": "application/json",
           },
-          body: JSON.stringify({ image_url: request.imageUrl, page_url: request.pageUrl })
+          body: JSON.stringify({
+            image_url: request.imageUrl,
+            page_url: request.pageUrl,
+          }),
         },
-        timeoutMs
+        timeoutMs,
       );
 
       if (!response.ok) {
         const isServerError = response.status >= 500;
         throw new ApiClientError(
           `Analyze API failed with status ${response.status}`,
-          'SERVER_ERROR',
-          isServerError
+          "SERVER_ERROR",
+          isServerError,
         );
       }
 
       const payload = (await response.json()) as { alt?: string };
-      if (!payload.alt || typeof payload.alt !== 'string') {
-        throw new ApiClientError('Analyze API returned empty alt text', 'UNKNOWN_ERROR', false);
+      if (!payload.alt || typeof payload.alt !== "string") {
+        throw new ApiClientError(
+          "Analyze API returned empty alt text",
+          "UNKNOWN_ERROR",
+          false,
+        );
       }
 
       return {
         altText: payload.alt,
-        source: 'api'
+        source: "api",
       };
     } catch (error) {
       const normalized = normalizeApiError(error);
@@ -70,13 +83,16 @@ export async function analyzeImage(
     }
   }
 
-  throw lastError ?? new ApiClientError('Analyze API failed', 'UNKNOWN_ERROR', false);
+  throw (
+    lastError ??
+    new ApiClientError("Analyze API failed", "UNKNOWN_ERROR", false)
+  );
 }
 
 async function fetchWithTimeout(
   url: string,
   init: RequestInit,
-  timeoutMs: number
+  timeoutMs: number,
 ): Promise<Response> {
   const controller = new AbortController();
   const timeoutId = globalThis.setTimeout(() => {
@@ -86,10 +102,14 @@ async function fetchWithTimeout(
   try {
     return await fetch(url, { ...init, signal: controller.signal });
   } catch (error) {
-    if (error instanceof DOMException && error.name === 'AbortError') {
-      throw new ApiClientError(`Analyze API timed out after ${timeoutMs}ms`, 'TIMEOUT', true);
+    if (error instanceof DOMException && error.name === "AbortError") {
+      throw new ApiClientError(
+        `Analyze API timed out after ${timeoutMs}ms`,
+        "TIMEOUT",
+        true,
+      );
     }
-    throw new ApiClientError('Network request failed', 'NETWORK_ERROR', true);
+    throw new ApiClientError("Network request failed", "NETWORK_ERROR", true);
   } finally {
     globalThis.clearTimeout(timeoutId);
   }
@@ -101,10 +121,10 @@ function normalizeApiError(error: unknown): ApiClientError {
   }
 
   if (error instanceof Error) {
-    return new ApiClientError(error.message, 'UNKNOWN_ERROR', false);
+    return new ApiClientError(error.message, "UNKNOWN_ERROR", false);
   }
 
-  return new ApiClientError('Unknown analyze error', 'UNKNOWN_ERROR', false);
+  return new ApiClientError("Unknown analyze error", "UNKNOWN_ERROR", false);
 }
 
 function sleep(ms: number): Promise<void> {
