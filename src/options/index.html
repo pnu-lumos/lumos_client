@@ -21,6 +21,18 @@
         <span>자동 분석 사용</span>
       </label>
 
+      <div class="field">
+        <label class="fieldLabel" for="apiBaseUrl">API Base URL</label>
+        <input
+          id="apiBaseUrl"
+          class="textInput"
+          type="url"
+          inputmode="url"
+          placeholder="https://api.example.com"
+        />
+        <p class="hint">비워두면 빌드 시 기본 URL을 사용하고, 없으면 mock으로 동작합니다.</p>
+      </div>
+
       <p id="status" class="status" role="status" aria-live="polite"></p>
     </main>
 

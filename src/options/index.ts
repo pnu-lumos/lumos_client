@@ -1,5 +1,7 @@
 import {
   getExtensionSettings,
+  isValidApiBaseUrl,
+  normalizeApiBaseUrl,
   onSettingsChanged,
   setExtensionSettings,
   type ExtensionSettings
@@ -8,6 +10,7 @@ import { warn } from '../utils/logger';
 
 const enabledInput = requireElement<HTMLInputElement>('#enabled');
 const autoAnalyzeInput = requireElement<HTMLInputElement>('#autoAnalyze');
+const apiBaseUrlInput = requireElement<HTMLInputElement>('#apiBaseUrl');
 const status = requireElement<HTMLElement>('#status');
 
 void loadSettings();
@@ -26,6 +29,19 @@ autoAnalyzeInput.addEventListener('change', () => {
   void saveSettings();
 });
 
+apiBaseUrlInput.addEventListener('change', () => {
+  void saveSettings();
+});
+
+apiBaseUrlInput.addEventListener('keydown', (event) => {
+  if (event.key !== 'Enter') {
+    return;
+  }
+
+  event.preventDefault();
+  void saveSettings();
+});
+
 async function loadSettings(): Promise<void> {
   try {
     const settings = await getExtensionSettings();
@@ -37,12 +53,21 @@ async function loadSettings(): Promise<void> {
 }
 
 async function saveSettings(): Promise<void> {
+  const normalizedApiBaseUrl = normalizeApiBaseUrl(apiBaseUrlInput.value);
+  if (normalizedApiBaseUrl.length > 0 && !isValidApiBaseUrl(normalizedApiBaseUrl)) {
+    status.textContent = 'API Base URL은 http:// 또는 https:// 주소여야 합니다.';
+    apiBaseUrlInput.focus();
+    return;
+  }
+
   try {
     await setExtensionSettings({
       enabled: enabledInput.checked,
-      autoAnalyze: autoAnalyzeInput.checked
+      autoAnalyze: autoAnalyzeInput.checked,
+      apiBaseUrl: normalizedApiBaseUrl
     });
 
+    apiBaseUrlInput.value = normalizedApiBaseUrl;
     status.textContent = '설정이 저장되었습니다.';
     window.setTimeout(() => {
       status.textContent = '';
@@ -56,6 +81,7 @@ async function saveSettings(): Promise<void> {
 function applySettings(settings: ExtensionSettings): void {
   enabledInput.checked = settings.enabled;
   autoAnalyzeInput.checked = settings.autoAnalyze;
+  apiBaseUrlInput.value = settings.apiBaseUrl;
   autoAnalyzeInput.disabled = !settings.enabled;
 }
 

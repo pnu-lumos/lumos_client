@@ -3,11 +3,13 @@ import { warn } from './logger';
 export interface ExtensionSettings {
   enabled: boolean;
   autoAnalyze: boolean;
+  apiBaseUrl: string;
 }
 
 export const DEFAULT_SETTINGS: ExtensionSettings = {
   enabled: true,
-  autoAnalyze: true
+  autoAnalyze: true,
+  apiBaseUrl: ''
 };
 
 export type SettingsChangeListener = (
@@ -44,7 +46,8 @@ export function setSyncStorage(items: Record<string, unknown>): Promise<void> {
 export async function getExtensionSettings(): Promise<ExtensionSettings> {
   const stored = await getSyncStorage<Partial<ExtensionSettings>>({
     enabled: DEFAULT_SETTINGS.enabled,
-    autoAnalyze: DEFAULT_SETTINGS.autoAnalyze
+    autoAnalyze: DEFAULT_SETTINGS.autoAnalyze,
+    apiBaseUrl: DEFAULT_SETTINGS.apiBaseUrl
   });
 
   return normalizeSettings(stored);
@@ -53,7 +56,8 @@ export async function getExtensionSettings(): Promise<ExtensionSettings> {
 export async function setExtensionSettings(settings: ExtensionSettings): Promise<void> {
   await setSyncStorage({
     enabled: settings.enabled,
-    autoAnalyze: settings.autoAnalyze
+    autoAnalyze: settings.autoAnalyze,
+    apiBaseUrl: normalizeApiBaseUrl(settings.apiBaseUrl)
   });
 }
 
@@ -66,7 +70,7 @@ export function onSettingsChanged(listener: SettingsChangeListener): () => void 
       return;
     }
 
-    const changedKeys = (['enabled', 'autoAnalyze'] as const).filter(
+    const changedKeys = (['enabled', 'autoAnalyze', 'apiBaseUrl'] as const).filter(
       (key) => changes[key] !== undefined
     );
     if (changedKeys.length === 0) {
@@ -93,6 +97,28 @@ function normalizeSettings(partial: Partial<ExtensionSettings>): ExtensionSettin
     autoAnalyze:
       typeof partial.autoAnalyze === 'boolean'
         ? partial.autoAnalyze
-        : DEFAULT_SETTINGS.autoAnalyze
+        : DEFAULT_SETTINGS.autoAnalyze,
+    apiBaseUrl:
+      typeof partial.apiBaseUrl === 'string'
+        ? normalizeApiBaseUrl(partial.apiBaseUrl)
+        : DEFAULT_SETTINGS.apiBaseUrl
   };
+}
+
+export function normalizeApiBaseUrl(value: string | null | undefined): string {
+  const trimmed = typeof value === 'string' ? value.trim() : '';
+  return trimmed.replace(/\/+$/, '');
+}
+
+export function isValidApiBaseUrl(value: string): boolean {
+  if (value.length === 0) {
+    return false;
+  }
+
+  try {
+    const parsed = new URL(value);
+    return parsed.protocol === 'http:' || parsed.protocol === 'https:';
+  } catch (_error) {
+    return false;
+  }
 }

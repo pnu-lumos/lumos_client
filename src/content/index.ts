@@ -21,7 +21,8 @@ const inFlight = new Set<string>();
 const announcer = createAnnouncer(document);
 const runtimeSettings: ExtensionSettings = {
   enabled: false,
-  autoAnalyze: false
+  autoAnalyze: false,
+  apiBaseUrl: ''
 };
 let settingsReady = false;
 
@@ -237,7 +238,8 @@ async function initializeSettings(): Promise<void> {
     warn('failed to load extension settings, using defaults', error);
     applyRuntimeSettings({
       enabled: true,
-      autoAnalyze: true
+      autoAnalyze: true,
+      apiBaseUrl: ''
     });
   } finally {
     settingsReady = true;
@@ -256,6 +258,7 @@ function applyRuntimeSettings(settings: ExtensionSettings): void {
 
   runtimeSettings.enabled = settings.enabled;
   runtimeSettings.autoAnalyze = settings.autoAnalyze;
+  runtimeSettings.apiBaseUrl = settings.apiBaseUrl;
   debug('settings changed', {
     enabled: settings.enabled,
     autoAnalyze: settings.autoAnalyze

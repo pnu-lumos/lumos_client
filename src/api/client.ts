@@ -5,9 +5,9 @@ import {
   type AnalyzeImageRequest,
   type AnalyzeImageResponse
 } from './types';
+import { getExtensionSettings, isValidApiBaseUrl, normalizeApiBaseUrl } from '../utils/storage';
 
-const USE_MOCK = import.meta.env.DEV;
-const API_BASE_URL = import.meta.env.VITE_LUMOS_API_BASE_URL;
+const DEFAULT_API_BASE_URL = normalizeApiBaseUrl(import.meta.env.VITE_LUMOS_API_BASE_URL);
 const DEFAULT_TIMEOUT_MS = 12_000;
 const DEFAULT_MAX_RETRIES = 2;
 const DEFAULT_RETRY_DELAY_MS = 400;
@@ -16,7 +16,8 @@ export async function analyzeImage(
   request: AnalyzeImageRequest,
   options: AnalyzeImageOptions = {}
 ): Promise<AnalyzeImageResponse> {
-  if (USE_MOCK || !API_BASE_URL) {
+  const apiBaseUrl = await resolveApiBaseUrl();
+  if (!apiBaseUrl) {
     return analyzeImageMock(request);
   }
 
@@ -28,7 +29,7 @@ export async function analyzeImage(
   for (let attempt = 0; attempt <= maxRetries; attempt += 1) {
     try {
       const response = await fetchWithTimeout(
-        `${API_BASE_URL}/api/analyze`,
+        `${apiBaseUrl}/api/analyze`,
         {
           method: 'POST',
           headers: {
@@ -110,4 +111,21 @@ function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => {
     globalThis.setTimeout(resolve, ms);
   });
+}
+
+async function resolveApiBaseUrl(): Promise<string | null> {
+  try {
+    const settings = await getExtensionSettings();
+    if (isValidApiBaseUrl(settings.apiBaseUrl)) {
+      return settings.apiBaseUrl;
+    }
+  } catch (_error) {
+    // Ignore storage lookup failures and fall back to the build-time default.
+  }
+
+  if (isValidApiBaseUrl(DEFAULT_API_BASE_URL)) {
+    return DEFAULT_API_BASE_URL;
+  }
+
+  return null;
 }
