@@ -7,7 +7,7 @@ export function detectCandidateImages(doc: Document): HTMLImageElement[] {
 
   for (const root of roots) {
     for (const image of queryPlatformImages(root, doc)) {
-      if (shouldAnalyzeImage(image)) {
+      if (shouldAnalyzeImage(image, true)) {
         unique.add(image);
       }
     }
@@ -19,9 +19,10 @@ export function detectCandidateImages(doc: Document): HTMLImageElement[] {
 }
 
 export function isCandidateImage(img: HTMLImageElement, doc: Document): boolean {
-  if (!shouldAnalyzeImage(img)) {
+  const inside = isInsideDetailRoots(img, doc);
+  if (!shouldAnalyzeImage(img, inside)) {
     return false;
   }
 
-  return isInsideDetailRoots(img, doc);
+  return inside;
 }

@@ -5,7 +5,7 @@ export default defineManifest({
   name: "Lumos",
   description:
     "시각장애인을 위한 쇼핑몰 상세 이미지 대체텍스트 생성 확장 프로그램",
-  version: "0.1.2",
+  version: "0.1.3",
   icons: {
     "128": "icons/icon128.png",
   },

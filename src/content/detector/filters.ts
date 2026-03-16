@@ -24,7 +24,7 @@ const FILTER = {
   maxAspectRatio: 1.5
 } as const;
 
-export function shouldAnalyzeImage(img: HTMLImageElement): boolean {
+export function shouldAnalyzeImage(img: HTMLImageElement, insideDetailRoot = false): boolean {
   if (img.dataset.lumosProcessed === 'true') {
     return false;
   }
@@ -41,6 +41,10 @@ export function shouldAnalyzeImage(img: HTMLImageElement): boolean {
 
   if (!hasRenderableBox(img)) {
     return false;
+  }
+
+  if (insideDetailRoot) {
+    return true;
   }
 
   const size = getImageSize(img);
