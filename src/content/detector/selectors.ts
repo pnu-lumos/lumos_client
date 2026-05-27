@@ -12,9 +12,9 @@ const DETECTOR_RULES: DetectorPlatformRule[] = [
   {
     platform: 'naverStore',
     hostMatchers: [/smartstore\.naver\.com$/i, /brand\.naver\.com$/i],
-    detailRootSelector: '#INTRODUCE',
+    detailRootSelector: '#INTRODUCE, #DEFAULT',
     imageSelector: 'img',
-    allowBodyFallback: false
+    allowBodyFallback: true
   },
   {
     platform: 'unknown',
@@ -52,7 +52,12 @@ export function isInsideDetailRoots(
 ): boolean {
   const rule = getDetectorRule(doc.location.hostname);
   if (rule.detailRootSelector.startsWith('#') || rule.detailRootSelector.startsWith('.')) {
-    return img.closest(rule.detailRootSelector) !== null;
+    if (img.closest(rule.detailRootSelector) !== null) {
+      return true;
+    }
+
+    const resolvedRoots = roots ?? getDetailRoots(doc);
+    return resolvedRoots.some((root) => root === img || root.contains(img));
   }
 
   const resolvedRoots = roots ?? getDetailRoots(doc);
@@ -62,4 +67,18 @@ export function isInsideDetailRoots(
 export function queryPlatformImages(root: ParentNode, doc: Document): HTMLImageElement[] {
   const rule = getDetectorRule(doc.location.hostname);
   return Array.from(root.querySelectorAll<HTMLImageElement>(rule.imageSelector));
+}
+
+export function isBodyFallbackRoot(doc: Document, roots?: HTMLElement[]): boolean {
+  const rule = getDetectorRule(doc.location.hostname);
+  if (!rule.allowBodyFallback) {
+    return false;
+  }
+
+  const resolvedRoots = roots ?? getDetailRoots(doc);
+  return (
+    resolvedRoots.length === 1 &&
+    resolvedRoots[0] === doc.body &&
+    doc.querySelector(rule.detailRootSelector) === null
+  );
 }

@@ -3,7 +3,14 @@ import { detectCandidateImages, isCandidateImage } from './detector';
 import { injectAltText } from './injector';
 import { requestImageAnalysis, sendPing } from './messaging';
 import { setupImageObserver } from './observer';
-import { markApiFailed, markApiRequested, markApiSucceeded } from './debug/request-visualizer';
+import {
+  initializeDebugVisualizer,
+  markApiFailed,
+  markApiRequested,
+  markApiSucceeded,
+  markCandidateScan,
+  markRuntimeSettings
+} from './debug/request-visualizer';
 import {
   bindImageToUrl,
   getCachedAltText,
@@ -26,6 +33,7 @@ const runtimeSettings: ExtensionSettings = {
 };
 let settingsReady = false;
 
+initializeDebugVisualizer();
 void sendPing().catch((error) => {
   warn('ping failed', error);
 });
@@ -107,6 +115,7 @@ async function analyzeAndInject(img: HTMLImageElement): Promise<void> {
 function scanCurrentImages(): void {
   const images = detectCandidateImages(document);
   debug('initial scan candidates', { count: images.length });
+  markCandidateScan(images.length);
   for (const img of images) {
     queueCandidateAnalysis(img);
   }
@@ -259,6 +268,7 @@ function applyRuntimeSettings(settings: ExtensionSettings): void {
   runtimeSettings.enabled = settings.enabled;
   runtimeSettings.autoAnalyze = settings.autoAnalyze;
   runtimeSettings.apiBaseUrl = settings.apiBaseUrl;
+  markRuntimeSettings(settings);
   debug('settings changed', {
     enabled: settings.enabled,
     autoAnalyze: settings.autoAnalyze

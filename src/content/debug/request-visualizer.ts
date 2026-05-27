@@ -6,10 +6,47 @@ const state = {
   totalRequests: 0,
   successRequests: 0,
   failedRequests: 0,
-  uniqueUrls: new Set<string>()
+  uniqueUrls: new Set<string>(),
+  lastCandidateCount: null as number | null,
+  settings: null as { enabled: boolean; autoAnalyze: boolean } | null
 };
 
 let panel: HTMLDivElement | null = null;
+
+export function initializeDebugVisualizer(): void {
+  if (!IS_DEBUG_VISUALIZER_ENABLED) {
+    return;
+  }
+
+  ensurePanel();
+  renderPanel();
+}
+
+export function markCandidateScan(candidateCount: number): void {
+  if (!IS_DEBUG_VISUALIZER_ENABLED) {
+    return;
+  }
+
+  state.lastCandidateCount = candidateCount;
+  ensurePanel();
+  renderPanel();
+}
+
+export function markRuntimeSettings(settings: {
+  enabled: boolean;
+  autoAnalyze: boolean;
+}): void {
+  if (!IS_DEBUG_VISUALIZER_ENABLED) {
+    return;
+  }
+
+  state.settings = {
+    enabled: settings.enabled,
+    autoAnalyze: settings.autoAnalyze
+  };
+  ensurePanel();
+  renderPanel();
+}
 
 export function markApiRequested(img: HTMLImageElement, imageUrl: string): void {
   if (!IS_DEBUG_VISUALIZER_ENABLED) {
@@ -95,9 +132,27 @@ function renderPanel(): void {
 
   panel.textContent = [
     'LUMOS DEV',
+    `active:   ${formatActiveState()}`,
+    `candidates: ${state.lastCandidateCount ?? '-'}`,
     `requests: ${state.totalRequests}`,
     `unique:   ${state.uniqueUrls.size}`,
     `success:  ${state.successRequests}`,
     `failed:   ${state.failedRequests}`
   ].join('\n');
+}
+
+function formatActiveState(): string {
+  if (!state.settings) {
+    return 'loading settings';
+  }
+
+  if (!state.settings.enabled) {
+    return 'disabled';
+  }
+
+  if (!state.settings.autoAnalyze) {
+    return 'auto off';
+  }
+
+  return 'on';
 }
